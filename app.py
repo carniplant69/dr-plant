@@ -2,37 +2,33 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# Configuration
+# 1. Config de la page
 st.set_page_config(page_title="Dr. Plant", page_icon="🌿")
 st.title("🌿 Dr. Plant : Diagnostic Expert")
 
-# --- RÉCUPÉRATION DE LA CLÉ ---
+# 2. Récupération PROPRE de la clé
+# On ne touche plus à cette partie, tout se passe dans les réglages Streamlit
 if "GEMINI_API_KEY" in st.secrets:
-    API_KEY = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=API_KEY)
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 else:
-    st.error("⚠️ Clé API manquante dans les Secrets Streamlit.")
+    st.error("Clé API manquante dans les Secrets.")
     st.stop()
 
-# --- INTERFACE ---
-img_file = st.camera_input("Prendre une photo de la feuille")
+# 3. Interface
+img_file = st.camera_input("Scanner une feuille")
 if not img_file:
-    img_file = st.file_uploader("OU choisir une photo", type=['jpg', 'png', 'jpeg'])
+    img_file = st.file_uploader("Ou envoyer une photo", type=['jpg', 'png', 'jpeg'])
 
-if img_file is not None:
+if img_file:
     img = Image.open(img_file)
-    st.image(img, caption="Plante à analyser", use_container_width=True)
+    st.image(img, use_container_width=True)
     
     if st.button("Lancer le diagnostic 🚀"):
-        with st.spinner("Analyse en cours..."):
+        with st.spinner("Analyse..."):
             try:
-                # Utilisation de Gemini 1.5 Flash
+                # On utilise le nom universel
                 model = genai.GenerativeModel('gemini-1.5-flash')
-                prompt = "Analyse cette plante : Diagnostic, Cause, et Tableau (Solution Naturelle Jungle Feed vs Solution Classique)."
-                response = model.generate_content([prompt, img])
-                
-                if response.text:
-                    st.success("✅ Diagnostic terminé !")
-                    st.markdown(response.text)
+                res = model.generate_content(["Identifie la maladie et donne une solution Jungle Feed.", img])
+                st.markdown(res.text)
             except Exception as e:
-                st.error(f"Désolé, l'IA rencontre une difficulté technique : {e}")
+                st.error(f"Détail de l'erreur : {e}")
