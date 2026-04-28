@@ -23,25 +23,19 @@ if img_file is not None:
     img = Image.open(img_file)
     st.image(img, caption="Plante à analyser", use_container_width=True)
     
-    if st.button("Lancer le diagnostic 🚀"):
-        with st.spinner("Analyse en cours par l'IA..."):
-            # Liste des noms de modèles à tester par ordre de priorité
-            models_to_try = ['gemini-1.5-flash', 'gemini-1.5-flash-latest']
-            success = False
-            
-            for model_name in models_to_try:
-                try:
-                    model = genai.GenerativeModel(model_name)
-                    prompt = "Analyse cette plante : Diagnostic, Cause, et Tableau (Solution Naturelle Jungle Feed vs Solution Classique)."
-                    response = model.generate_content([prompt, img])
-                    
-                    if response.text:
-                        st.success(f"✅ Diagnostic terminé (Modèle : {model_name})")
-                        st.markdown(response.text)
-                        success = True
-                        break # On a réussi, on sort de la boucle
-                except Exception as e:
-                    continue # Si ça échoue, on tente le suivant
-            
-            if not success:
-                st.error("Désolé, l'IA ne répond pas. Vérifie que ta clé API est valide et n'a pas expiré.")
+  if st.button("Lancer le diagnostic 🚀"):
+        with st.spinner("Analyse en cours..."):
+            try:
+                # On teste le modèle le plus récent
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content([
+                    "Identifie cette plante et sa maladie. Propose un produit Jungle Feed.", 
+                    img
+                ])
+                
+                if response.text:
+                    st.success("✅ Diagnostic terminé !")
+                    st.markdown(response.text)
+            except Exception as e:
+                # ICI : On affiche l'erreur technique exacte pour comprendre
+                st.error(f"Erreur technique réelle : {e}")
