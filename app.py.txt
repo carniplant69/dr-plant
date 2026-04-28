@@ -1,0 +1,32 @@
+import streamlit as st
+import google.generativeai as genai
+from PIL import Image
+
+# Configuration de la page
+st.title("🌿 Dr. Plant : Ton Diagnostic Gratuit")
+st.write("Scanne ta plante, on te dit ce qu'elle a et comment la soigner !")
+
+# Ta clé API (à cacher plus tard pour la sécurité)
+API_KEY = "TA_CLE_GEMINI_ICI"
+genai.configure(api_key=API_KEY)
+
+# Bouton pour prendre la photo
+img_file = st.camera_input("Prendre une photo de la feuille malade")
+
+if img_file is not None:
+    img = Image.open(img_file)
+    st.image(img, caption="Analyse en cours...", use_column_width=True)
+    
+    # Appel à Gemini
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    prompt = """Analyse cette plante. Identifie la maladie. 
+    Donne le résultat sous cette forme :
+    Diagnostic : [Nom de la maladie]
+    Conseil : [Bref conseil]
+    Solution Naturelle : [Produit Jungle Feed]
+    Solution Classique : [Produit type Algoflash]"""
+    
+    response = model.generate_content([prompt, img])
+    
+    st.success("Résultat de l'analyse :")
+    st.write(response.text)
