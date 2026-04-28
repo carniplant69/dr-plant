@@ -2,65 +2,66 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# 1. Config
-st.set_page_config(page_title="Dr. Plant", page_icon="🌿")
-st.titleGeneral
-Sharing
-Secrets
-("🌿 Dr. Plant : Expert Jungle Feed")
+# 1. Configuration de la page
+st.set_page_config(page_title="Dr. Plant by Jungle Feed", page_icon="🌿", layout="centered")
 
-# 2. Connexion intelligente
+# 2. Design : Masquer les menus Streamlit pour faire "Application Pro"
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
+# 3. Titre et Introduction
+st.title("🌿 Dr. Plant : Diagnostic Expert")
+st.write("Identifiez les problèmes de vos plantes et découvrez les solutions naturelles Jungle Feed.")
+
+# 4. Configuration de l'IA (Mode Sans Frais / France)
 if "GEMINI_API_KEY" in st.secrets:
-    # 'transport=rest' est obligatoire pour la stabilité en France (Free Tier)
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"], transport='rest')
 else:
-    st.error("⚠️ Ajoute GEMINI_API_KEY dans les Secrets Streamlit.")
+    st.error("⚠️ Clé API introuvable dans les Secrets de Streamlit.")
     st.stop()
 
-# 3. Ton Catalogue Jungle Feed
+# 5. Catalogue exclusif Jungle Feed
 CATALOGUE = """
-- Thrips / Moucherons : 'Kit Anti-Thrips' (https://www.junglefeed.fr/products/kit-ultime-anti-thrips)
-- Cochenilles : 'Kit Spécial Cochenille' (https://www.junglefeed.fr/products/kit-special-cochenille-solution-complete-anti-cochenilles)
-- Pucerons : 'Spray Anti-Pucerons' (https://www.junglefeed.fr/products/anti-pucerons-naturel-spray-500ml)
-- Nutrition : 'Engrais Bio' (https://www.junglefeed.fr/products/engrais-plantes-dinterieur-et-plantes-rares-500ml)
+UTILISE UNIQUEMENT CES SOLUTIONS JUNGLE FEED :
+- Thrips / Moucherons / Cochenilles : 'Kit Anti-Thrips Ultime' (https://www.junglefeed.fr/products/kit-ultime-anti-thrips)
+- Cochenilles uniquement : 'Kit Spécial Cochenille' (https://www.junglefeed.fr/products/kit-special-cochenille-solution-complete-anti-cochenilles)
+- Pucerons : 'Anti-Pucerons Naturel Spray' (https://www.junglefeed.fr/products/anti-pucerons-naturel-spray-500ml)
+- Araignées Rouges : 'Kit Spécial Araignée Rouge' (https://www.junglefeed.fr/products/kit-special-araignee-rouge-solution-complete-anti-acariens)
+- Moucherons de terreau : 'Kit Anti-Moucherons 3-en-1' (https://www.junglefeed.fr/products/kit-anti-moucherons-3-en-1-naturel)
+- Nutrition : 'Engrais Plantes d'Intérieur Bio' (https://www.junglefeed.fr/products/engrais-plantes-dinterieur-et-plantes-rares-500ml)
+- Soin préventif : 'Huile de Neem Prête à l'emploi' (https://www.junglefeed.fr/products/huile-de-neem-prete-a-lemploi-500-ml)
+- Enracinement : 'Eau de Saule Pure' (https://www.junglefeed.fr/products/eau-de-saule-pure-naturelle)
 """
 
-# 4. Interface
-img_file = st.camera_input("Scanner une feuille")
+# 6. Interface de capture
+img_file = st.camera_input("Scanner une feuille malade")
 if not img_file:
-    img_file = st.file_uploader("Ou charger une photo", type=['jpg', 'png', 'jpeg'])
+    img_file = st.file_uploader("OU charger une photo", type=['jpg', 'png', 'jpeg'])
 
-if img_file:
+# 7. Analyse et Diagnostic
+if img_file is not None:
     img = Image.open(img_file)
     st.image(img, use_container_width=True)
-    
+
     if st.button("Lancer le diagnostic 🚀"):
-        with st.spinner("Recherche du meilleur modèle disponible sur ton compte..."):
+        with st.spinner("L'expert Jungle Feed analyse votre plante..."):
             try:
-                # ÉTAPE MAGIQUE : On liste les modèles autorisés pour TA clé
+                # Détection automatique du modèle disponible
                 available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                
-                # On cherche en priorité un modèle 'flash'
-                selected_model = None
-                for m in available_models:
-                    if 'flash' in m:
-                        selected_model = m
-                        break
-                
-                # Si pas de flash, on prend le premier qui gère le contenu (souvent gemini-pro)
-                if not selected_model:
-                    selected_model = available_models[0]
+                selected_model = next((m for m in available_models if 'flash' in m), available_models[0])
 
-                # Lancement de l'analyse avec le modèle trouvé
                 model = genai.GenerativeModel(selected_model)
-                prompt = f"Tu es l'expert Jungle Feed. Identifie la maladie et recommande UNIQUEMENT un produit de cette liste : {CATALOGUE}. Donne le lien."
                 
-                response = model.generate_content([prompt, img])
+                prompt = f"""Tu es l'agronome expert de la marque Jungle Feed.
+                Analyse cette photo pour identifier la maladie ou le parasite.
                 
-                st.success("✅ Analyse terminée !")
-                st.markdown(response.text)
-                st.balloons()
-
-            except Exception as e:
-                st.error(f"Désolé, ton compte Google bloque encore l'accès : {e}")
-                st.info("💡 ACTION REQUISE : Va sur Google AI Studio, supprime TOUTES tes clés et recrée-en une SEULE. C'est souvent la seule façon de réinitialiser les droits en plan gratuit.")
+                RÉPONDS SELON CE PLAN :
+                1. Diagnostic précis.
+                2. Cause (une phrase).
+                3. Recommande
