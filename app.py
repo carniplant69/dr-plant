@@ -61,4 +61,9 @@ if img_file:
                     st.markdown(response.text)
                     st.balloons()
             except Exception as e:
-                st.error(f"Erreur : {e}")
+                if "429" in str(e):
+                    st.error("🚀 Trop de succès ! Le docteur prend une pause de 60 secondes. Réessayez dans un instant.")
+                elif "404" in str(e):
+                    st.error("Modèle introuvable. Vérifiez votre clé API.")
+                else:
+                    st.error(f"Une petite interruption technique : {e}")
