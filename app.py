@@ -9,9 +9,9 @@ st.write("Scanne ta plante, on te dit ce qu'elle a et comment la soigner !")
 
 # --- CONFIGURATION API ---
 # Remplace bien par TA clé API
-API_KEY = "TA_CLE_API_ICI" 
+API_KEY = "AIzaSyBv1lKm5F4zwhtgH34tJnGf1VGtay99L_E" 
 
-if API_KEY == "TA_CLE_API_ICI":
+if API_KEY == "AIzaSyBv1lKm5F4zwhtgH34tJnGf1VGtay99L_E":
     st.error("⚠️ Tu as oublié de mettre ta clé API Gemini dans le code !")
 else:
     genai.configure(api_key=API_KEY)
