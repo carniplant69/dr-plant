@@ -4,7 +4,10 @@ from PIL import Image
 
 # 1. Config
 st.set_page_config(page_title="Dr. Plant", page_icon="🌿")
-st.title("🌿 Dr. Plant : Expert Jungle Feed")
+st.titleGeneral
+Sharing
+Secrets
+("🌿 Dr. Plant : Expert Jungle Feed")
 
 # 2. Connexion intelligente
 if "GEMINI_API_KEY" in st.secrets:
