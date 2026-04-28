@@ -1,0 +1,9 @@
+[theme]
+primaryColor = "#2D5A27"          # Le vert Jungle Feed
+backgroundColor = "#FFFFFF"       # Fond blanc
+secondaryBackgroundColor = "#F0F2F6" 
+textColor = "#262730"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"           # Cache la barre d'outils en haut
