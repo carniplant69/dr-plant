@@ -23,19 +23,16 @@ if img_file is not None:
     img = Image.open(img_file)
     st.image(img, caption="Plante à analyser", use_container_width=True)
     
-  if st.button("Lancer le diagnostic 🚀"):
+    if st.button("Lancer le diagnostic 🚀"):
         with st.spinner("Analyse en cours..."):
             try:
-                # On teste le modèle le plus récent
+                # Utilisation de Gemini 1.5 Flash
                 model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content([
-                    "Identifie cette plante et sa maladie. Propose un produit Jungle Feed.", 
-                    img
-                ])
+                prompt = "Analyse cette plante : Diagnostic, Cause, et Tableau (Solution Naturelle Jungle Feed vs Solution Classique)."
+                response = model.generate_content([prompt, img])
                 
                 if response.text:
                     st.success("✅ Diagnostic terminé !")
                     st.markdown(response.text)
             except Exception as e:
-                # ICI : On affiche l'erreur technique exacte pour comprendre
-                st.error(f"Erreur technique réelle : {e}")
+                st.error(f"Désolé, l'IA rencontre une difficulté technique : {e}")
