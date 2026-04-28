@@ -54,7 +54,7 @@ if img_file:
                 
                 response = model.generate_content([prompt, img])
                 
-                st.success(f"Diagnostic réussi avec {selected_model} !")
+                st.success("✅ Analyse terminée !")
                 st.markdown(response.text)
                 st.balloons()
 
