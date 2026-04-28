@@ -2,66 +2,51 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# 1. Configuration visuelle
-st.set_page_config(page_title="Dr. Plant by Jungle Feed", page_icon="🌿")
-st.title("🌿 Dr. Plant : Ton Diagnostic Jungle Feed")
-st.write("Scanne ta plante, l'IA identifie le problème et te donne la solution naturelle adaptée.")
+# 1. Config de la page
+st.set_page_config(page_title="Dr. Plant", page_icon="🌿")
+st.title("🌿 Dr. Plant : Diagnostic Jungle Feed")
 
-# 2. Configuration API (via les Secrets Streamlit)
+# 2. Sécurité de la Clé API
 if "GEMINI_API_KEY" in st.secrets:
+    # On initialise avec la clé des Secrets
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 else:
-    st.error("⚠️ Configuration API manquante dans les Secrets.")
+    st.error("⚠️ La clé GEMINI_API_KEY est manquante dans les Secrets de Streamlit.")
     st.stop()
 
-# 3. Interface de Scan
-img_file = st.camera_input("Prendre une photo de la feuille malade")
+# 3. Interface
+img_file = st.camera_input("Prendre une photo de la feuille")
 if not img_file:
-    img_file = st.file_uploader("OU choisir une photo dans la galerie", type=['jpg', 'png', 'jpeg'])
+    img_file = st.file_uploader("OU choisir une photo", type=['jpg', 'png', 'jpeg'])
 
-# 4. Le Catalogue Jungle Feed (Extrait de ton site)
-# Cette liste sert de base de connaissances exclusive à l'IA
-CATALOGUE_JUNGLE_FEED = """
-- Thrips / Moucherons / Cochenilles : 'Kit Anti-Thrips Ultime' ou 'Anti Thrips & Moucherons Buddies' (Lien : https://www.junglefeed.fr/products/kit-ultime-anti-thrips)
-- Cochenilles uniquement : 'Kit Spécial Cochenille' (Lien : https://www.junglefeed.fr/products/kit-special-cochenille-solution-complete-anti-cochenilles)
-- Pucerons : 'Anti-Pucerons Naturel Spray' (Lien : https://www.junglefeed.fr/products/anti-pucerons-naturel-spray-500ml)
-- Araignées Rouges : 'Kit Spécial Araignée Rouge' (Lien : https://www.junglefeed.fr/products/kit-special-araignee-rouge-solution-complete-anti-acariens)
-- Moucherons de terreau : 'Kit Anti-Moucherons 3-en-1' (Lien : https://www.junglefeed.fr/products/kit-anti-moucherons-3-en-1-naturel)
-- Manque de nutrition / Croissance : 'Engrais Plantes d'Intérieur Bio' ou 'Jungle Stick' (Lien : https://www.junglefeed.fr/products/engrais-plantes-dinterieur-et-plantes-rares-500ml)
-- Protection & Soin général : 'Huile de Neem' ou 'Savon Noir' (Lien : https://www.junglefeed.fr/products/huile-de-neem-prete-a-lemploi-500-ml)
-- Booster Racinaire : 'Eau de Saule' (Lien : https://www.junglefeed.fr/products/eau-de-saule-pure-naturelle)
-"""
-
-if img_file is not None:
+if img_file:
     img = Image.open(img_file)
-    st.image(img, caption="Analyse en cours...", use_container_width=True)
+    st.image(img, use_container_width=True)
     
-    if st.button("Lancer le diagnostic Jungle Feed 🚀"):
-        with st.spinner("L'expert Jungle Feed analyse les feuilles..."):
+    if st.button("Lancer le diagnostic 🚀"):
+        with st.spinner("Analyse en cours..."):
             try:
-                # Utilisation du modèle Flash (rapide et efficace)
+                # FORCE le nom du modèle sans le préfixe 'models/' si le 404 persiste
+                # On teste la version la plus stable pour les comptes Pro
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                # Le Prompt qui force l'exclusivité
-                prompt = f"""Tu es l'agronome expert exclusif de Jungle Feed. 
-                Ton but est de vendre les solutions de la boutique.
-                
-                ANALYSE CETTE IMAGE :
-                1. Diagnostic : Identifie précisément la maladie ou le nuisible.
-                2. Solution : Recommande UNIQUEMENT un ou plusieurs produits de ce catalogue :
-                {CATALOGUE_JUNGLE_FEED}
-                
-                CONSIGNES STRICTES :
-                - Ne propose AUCUNE autre marque.
-                - Si la plante n'a rien, propose un 'Jungle Stick' en entretien préventif.
-                - Affiche le lien URL du produit de manière très visible.
-                - Utilise un ton pro, expert et bienveillant."""
+                prompt = """Tu es l'agronome expert de Jungle Feed. 
+                Identifie la maladie sur cette photo.
+                Propose uniquement un produit de la gamme Jungle Feed (ex: Huile de Neem, Purin d'Ortie, Kit Thrips).
+                Donne le lien : https://www.junglefeed.fr/collections/soins"""
 
+                # On génère le contenu
                 response = model.generate_content([prompt, img])
                 
-                st.success("✅ Diagnostic terminé !")
+                st.success("Analyse réussie !")
                 st.markdown(response.text)
-                st.balloons() # Petite animation de succès
 
             except Exception as e:
-                st.error(f"Une erreur est survenue : {e}")
+                # Si le premier essai échoue, on tente avec le nom complet
+                try:
+                    model = genai.GenerativeModel('models/gemini-1.5-flash')
+                    response = model.generate_content([prompt, img])
+                    st.markdown(response.text)
+                except Exception as e2:
+                    st.error(f"Erreur persistante : {e2}")
+                    st.info("Vérifie dans Google AI Studio que ta clé est bien 'Pay-as-you-go' et que l'API Gemini est activée.")
