@@ -2,10 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- 1. CONFIGURATION VISUELLE & MARQUE ---
+# 1. Config de la page & Design Pro
 st.set_page_config(page_title="Dr. Plant by Jungle Feed", page_icon="🌿", layout="centered")
 
-# Design personnalisé (Bouton vert et suppression des menus inutiles)
+# CSS pour un look "App Mobile" sans les menus Streamlit
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -14,72 +14,60 @@ st.markdown("""
     .stButton>button {
         background-color: #2D5A27;
         color: white;
-        border-radius: 20px;
+        border-radius: 15px;
+        height: 3em;
         width: 100%;
-        border: none;
-        padding: 10px;
         font-weight: bold;
-    }
-    .stButton>button:hover {
-        background-color: #1e3d1a;
-        color: white;
+        border: none;
     }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("🌿 Dr. Plant : Diagnostic Expert")
-st.write("L'IA Jungle Feed au service de vos plantes d'intérieur.")
+st.write("Identifiez vos parasites et trouvez la solution Jungle Feed adaptée.")
 
-# --- 2. CONNEXION API ---
+# 2. Initialisation API
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"], transport='rest')
 else:
-    st.error("⚠️ Clé API manquante dans les Secrets Streamlit.")
+    st.error("⚠️ Clé API manquante dans les Secrets.")
     st.stop()
 
-# --- 3. CATALOGUE PRODUITS JUNGLE FEED ---
+# 3. Catalogue de soins
 CATALOGUE = """
 UTILISE UNIQUEMENT CES SOLUTIONS JUNGLE FEED :
 - Thrips / Moucherons / Cochenilles : 'Kit Anti-Thrips Ultime' (https://www.junglefeed.fr/products/kit-ultime-anti-thrips)
-- Cochenilles uniquement : 'Kit Spécial Cochenille' (https://www.junglefeed.fr/products/kit-special-cochenille-solution-complete-anti-cochenilles)
+- Cochenilles : 'Kit Spécial Cochenille' (https://www.junglefeed.fr/products/kit-special-cochenille-solution-complete-anti-cochenilles)
 - Pucerons : 'Anti-Pucerons Naturel Spray' (https://www.junglefeed.fr/products/anti-pucerons-naturel-spray-500ml)
-- Araignées Rouges : 'Kit Spécial Araignée Rouge' (https://www.junglefeed.fr/products/kit-special-araignee-rouge-solution-complete-anti-acariens)
-- Nutrition : 'Engrais Plantes d'Intérieur Bio' (https://www.junglefeed.fr/products/engrais-plantes-dinterieur-et-plantes-rares-500ml)
-- Soin préventif : 'Huile de Neem Prête à l'emploi' (https://www.junglefeed.fr/products/huile-de-neem-prete-a-lemploi-500-ml)
+- Nutrition : 'Engrais Bio' (https://www.junglefeed.fr/products/engrais-plantes-dinterieur-et-plantes-rares-500ml)
+- Protection : 'Huile de Neem Prête à l'emploi' (https://www.junglefeed.fr/products/huile-de-neem-prete-a-lemploi-500-ml)
 """
 
-# --- 4. INTERFACE ---
-img_file = st.camera_input("📸 Scannez votre plante")
+# 4. Scanner
+img_file = st.camera_input("📸 Prenez une photo de la feuille")
 if not img_file:
-    img_file = st.file_uploader("OU chargez une photo", type=['jpg', 'png', 'jpeg'])
+    img_file = st.file_uploader("OU choisissez une photo", type=['jpg', 'png', 'jpeg'])
 
 if img_file:
     img = Image.open(img_file)
     st.image(img, use_container_width=True)
     
-    if st.button("Lancer le diagnostic Jungle Feed 🚀"):
-        with st.spinner("Analyse en cours..."):
+    if st.button("Lancer l'analyse Jungle Feed 🚀"):
+        with st.spinner("L'expert analyse votre plante..."):
             try:
-                # On trouve automatiquement le modèle disponible
-                models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                sel_model = next((m for m in models if 'flash' in m), models[0])
-                model = genai.GenerativeModel(sel_model)
+                # Sélection auto du modèle
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                instruction = "Tu es l'agronome expert Jungle Feed. Identifie la maladie sur cette photo. Recommande UNIQUEMENT un produit de cette liste : " + CATALOGUE
+                prompt = f"Tu es l'expert agronome Jungle Feed. Diagnostic précis de la maladie sur cette photo. Recommande UN produit de cette liste avec son lien : {CATALOGUE}. Sois bref et pro."
                 
-                response = model.generate_content([instruction, img])
+                response = model.generate_content([prompt, img])
                 
-                if response.text:
-                    st.success("✅ Diagnostic terminé !")
-                    st.markdown(response.text)
-                    st.balloons()
+                st.success("✅ Diagnostic terminé !")
+                st.markdown(response.text)
+                st.balloons()
 
             except Exception as e:
                 if "429" in str(e):
-                    st.warning("⏳ Trop de scans ! Le docteur prend une pause de 60 secondes. Réessayez dans un instant.")
+                    st.warning("⏳ Trop de succès ! Le docteur fait une pause. Réessayez dans 1 minute.")
                 else:
-                    st.error(f"Une petite erreur : {e}")
-
-# --- 5. FOOTER ---
-st.divider()
-st.caption("© 2026 Jungle Feed - Diagnostics gratuits par IA")
+                    st.error(f"Oups, une petite erreur : {e}")
