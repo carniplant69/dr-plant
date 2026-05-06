@@ -4,12 +4,25 @@ from PIL import Image
 
 # 1. Look & Feel Jungle Feed
 st.set_page_config(page_title="Dr. Plant Jungle Feed", page_icon="🌿")
-st.markdown("<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} .stButton>button {background-color: #2D5A27; color: white; border-radius: 20px; width: 100%; font-weight: bold;}</style>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stButton>button {
+        background-color: #2D5A27;
+        color: white;
+        border-radius: 20px;
+        width: 100%;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("🌿 Dr. Plant : Diagnostic Expert")
 st.write("Identifiez vos parasites et trouvez la solution Jungle Feed adaptée.")
 
-# 2. Config API
+# 2. Configuration API
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"], transport='rest')
 else:
@@ -28,20 +41,25 @@ CATALOGUE = """
 # 4. Interface
 img_file = st.camera_input("📸 Prenez une photo")
 if not img_file:
-    img_file = st.file_uploader("OU choisissez une photo", type=['jpg', 'png', 'jpeg'])
+    img_file = st.file_uploader("OU chargez une image", type=['jpg', 'png', 'jpeg'])
 
 if img_file:
     img = Image.open(img_file)
     st.image(img, use_container_width=True)
     
     if st.button("Lancer l'analyse Jungle Feed 🚀"):
-        with st.spinner("L'expert analyse..."):
+        with st.spinner("L'IA Jungle Feed analyse les feuilles..."):
             try:
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 prompt = "Tu es l'agronome expert Jungle Feed. Identifie la maladie sur cette photo. Recommande UN produit de cette liste avec son lien : " + CATALOGUE
+                
                 response = model.generate_content([prompt, img])
+                
                 st.success("✅ Diagnostic terminé !")
                 st.markdown(response.text)
                 st.balloons()
             except Exception as e:
-                st.error(f"Erreur : {e}")
+                if "429" in str(e):
+                    st.warning("⏳ Trop de scans ! Réessayez dans 60 secondes.")
+                else:
+                    st.error(f"Erreur technique : {e}")
